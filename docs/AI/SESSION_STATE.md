@@ -1,0 +1,75 @@
+# Session State
+
+- **当前 Goal**: 构建并在 Cloudflare Pages 上部署支持 Chainlist 动态 RPC 基准测试平台（默认 1868 Soneium），提供全面的 RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系。
+- **当前 Task**: TASK-011 (RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系)
+- **当前状态**: DONE
+- **已完成内容**:
+  - [x] **单次静态能力体检引擎 (Preflight Capability Check)**:
+    - 新增 `src/lib/benchmark/preflight.ts`，探测早期区块 0x1 归档支持、CORS 浏览器直连与链 ID 匹配度。
+    - 仅在首次加入节点时异步执行 1 次并持久缓存，避免重复占用带宽与打爆限流。
+  - [x] **动态新区块可用性与 -32001 滞后检测**:
+    - 在每次波次中出新块时并发验证 `eth_getBlockByNumber`，准确捕获 `-32001 block not found` 与空值，统计新块状态命中率。
+  - [x] **智能避坑建议与角色评定系统 (Advisory Engine)**:
+    - 实现 `generateNodeAdvisory`，自动识别“首选主读 RPC”、“极速轻量 (无归档)”、“备用容灾 (新块滞后)”等，给出前端工程避坑指引。
+  - [x] **排行榜看板多维特征与避坑标签可视化**:
+    - 排行榜增加归档标签（`Full Archive` / `Pruned`）、新块命中率（`-32001` 次数）、避坑定位徽章与悬浮指引。
+  - [x] **节点详情模态框新增「深度体检与避坑诊断」Tab**:
+    - 全景展示 0x1 早期区块测试原因、新块命中详情、CORS 兼容性与集群跳块异常。
+  - [x] **全新「📑 深度诊断报告」模态框与一键导出**:
+    - 网页导航栏与表格上方提供入口，以 `tmp/report.md` 风格生成四维矩阵报告，支持一键复制 Markdown 报告与下载 JSON 证据链。
+  - [x] **自动化测试扩展至 16/16 100% 通过**:
+    - 在 `tests/full-suite.test.mjs` 中添加针对静态体检、新块 -32001 及跳块监测的自动化测试。
+  - [x] **生产构建与全网发布**:
+    - `npm run build` 成功完成。
+    - 发布至 Cloudflare Pages 生产环境：`https://chainlist-rpc-benchmarks.pages.dev`。
+    - 线上真实端到端测试 4/4 验证全部通过 (`npm run test:e2e`)。
+- **修改过的文件**:
+  - `src/lib/benchmark/types.ts`
+  - `src/lib/benchmark/preflight.ts`
+  - `src/lib/benchmark/rpcClient.ts`
+  - `src/lib/benchmark/runner.ts`
+  - `src/lib/benchmark/metrics.ts`
+  - `src/components/DeepReportModal.tsx`
+  - `src/components/LeaderboardTable.tsx`
+  - `src/components/RpcDetailModal.tsx`
+  - `src/components/Header.tsx`
+  - `src/App.tsx`
+  - `tests/full-suite.test.mjs`
+  - `docs/AI/TASK_INDEX.md`
+  - `docs/AI/SESSION_STATE.md`
+  - `docs/AI/tasks/TASK-011.md`
+- **已运行的验证命令及结果**:
+  - `npm test`: 16/16 自动化测试全部通过，退出码 0。
+  - `npm run build`: Vite & TypeScript 编译通过，耗时 2.68s，退出码 0。
+  - `npx wrangler pages deploy dist`: 生产版本部署成功，退出码 0。
+  - `npm run test:e2e`: 线上域名真实网络 E2E 验证全部通过，退出码 0。
+- **线上部署访问地址**:
+  - 生产主站: `https://chainlist-rpc-benchmarks.pages.dev`
+  - 边缘 API: `https://chainlist-rpc-benchmarks.pages.dev/api/chain/1868`
+  - [x] **排查并根治平均区块滞后虚高（10+ blocks）Bug**:
+    - **根本原因**: 之前 `recalculateLeaderboard` 中使用了当前最新全局块号减去历史采样块号 (`maxBlockNumber - h.blockNumber`)。由于链上不断出新块，几十秒前采样的正常区块被误判为滞后 10~30 块，导致平均值虚高。
+    - **正确算法修复**: 在每次探测轮次（Wave）并发发起时，统计该轮次中全网返回的最高块 $M_w$，各节点仅计算**在该轮次内相对 $M_w$ 的真实滞后值** $\text{waveLag} = M_w - \text{block}$。
+    - **真实平均计算**: 历史多次探测的 $\text{avgBlockLag}$ 为各轮次 $\text{waveLag}$ 的算术平均值。
+    - 同步节点在每一轮均为最新块，其 $\text{waveLag} = 0$，历史平均值严格保持为真实准确的 **`0.00 blocks`**，不再随时间推移而累加虚增！
+  - [x] **单元测试增强与验证**:
+    - 在 `tests/full-suite.test.mjs` 中添加针对多轮次链上区块递增时平均滞后不虚增的专门验证用例，14/14 项测试全部通过 (`npm test`)。
+  - [x] **重新构建打包与全网部署**:
+    - `npm run build` 成功完成，耗时 2.58s。
+    - `bash deploy.sh` 生产版本重新发布至 Cloudflare Pages。
+    - `npm run test:e2e` 线上真实端到端测试 4/4 验证全部通过。
+- **修改过的文件**:
+  - `src/lib/benchmark/runner.ts`
+  - `src/lib/benchmark/metrics.ts`
+  - `src/lib/benchmark/types.ts`
+  - `tests/full-suite.test.mjs`
+  - `docs/AI/TASK_INDEX.md`
+  - `docs/AI/SESSION_STATE.md`
+  - `docs/AI/tasks/TASK-010.md`
+- **已运行的验证命令及结果**:
+  - `npm test`: 14/14 自动化测试通过，退出码 0。
+  - `npm run build`: Vite & TypeScript 编译通过，退出码 0。
+  - `bash deploy.sh`: 生产版本部署成功，退出码 0。
+  - `npm run test:e2e`: 线上域名真实网络 E2E 验证全部通过，退出码 0。
+- **线上部署访问地址**:
+  - 生产主站: `https://chainlist-rpc-benchmarks.pages.dev`
+  - 边缘 API: `https://chainlist-rpc-benchmarks.pages.dev/api/chain/1868`
