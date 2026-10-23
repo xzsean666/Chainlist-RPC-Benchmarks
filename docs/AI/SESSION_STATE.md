@@ -1,9 +1,35 @@
 # Session State
 
 - **当前 Goal**: 构建并在 Cloudflare Pages 上部署支持 Chainlist 动态 RPC 基准测试平台（支持主网与测试网无缝切换与筛选，默认 1868 Soneium），提供全面的 RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系。
-- **当前 Task**: TASK-012 (支持测试网检测与切换体系（测试网分类筛选、搜索、Soneium Minato/Sepolia 预设与全流程基准测试）)
+- **当前 Task**: TASK-013 (优化网络选择下拉菜单实心视觉设计，彻底消除透明模糊与层叠干扰)
 - **当前状态**: DONE
 - **已完成内容**:
+  - [x] **根治下拉菜单透明模糊 Bug (`src/components/Header.tsx`)**:
+    - **根本原因**: 之前使用了非标准 Tailwind 语法 `bg-slate-900/98`，未被 Tailwind 识别生成样式，导致背景退化为完全透明 (`background-color: transparent`)，叠加 `backdrop-blur-xl` 使底层文字与看板完全重叠花眼。
+    - **实心纯色重构**: 替换为原生纯色实心深色底色 `bg-[#0c121e]`，配合 `border border-slate-700 shadow-2xl shadow-black p-3.5 w-[22rem] sm:w-[26rem]`，背景阻断率 100%，绝不透出底层内容。
+    - **遮罩层增强**: 将外部遮罩改为 `bg-black/60`，点击即可收起，聚焦感与层次感明显提升。
+    - **内嵌各级控件高对比度优化**:
+      - 分类 Tab 切换框采用 `bg-slate-950` 与 `border border-slate-800`。
+      - 快捷测试网标签与网络项按钮均采用高对比度实心底色，悬浮与选中态分明。
+      - 自定义 Chain ID 输入框与加载按钮采用加深实心背景与高亮边框。
+  - [x] **自动化测试扩展与验证**:
+    - `npm test`: 19/19 自动化测试全部通过。
+    - `npm run build`: 编译打包通过，耗时 2.77s，CSS 明确包含纯色实心深底。
+    - `bash deploy.sh`: 生产版本成功发布至 Cloudflare Pages。
+    - `npm run test:e2e`: 线上域名真实网络端到端测试 4/4 验证全部通过。
+- **修改过的文件**:
+  - `src/components/Header.tsx`
+  - `docs/AI/TASK_INDEX.md`
+  - `docs/AI/SESSION_STATE.md`
+  - `docs/AI/tasks/TASK-013.md`
+- **已运行的验证命令及结果**:
+  - `npm test`: 19/19 自动化测试全部通过，退出码 0。
+  - `npm run build`: Vite & TypeScript 编译通过，耗时 2.77s，退出码 0。
+  - `bash deploy.sh`: 生产版本部署成功，退出码 0。
+  - `npm run test:e2e`: 线上域名真实网络 E2E 验证全部通过，退出码 0。
+- **线上部署访问地址**:
+  - 生产主站: `https://chainlist-rpc-benchmarks.pages.dev`
+  - Minato 测试网 API: `https://chainlist-rpc-benchmarks.pages.dev/api/chain/1946`
   - [x] **测试网预设与数据分类层 (`src/lib/chainlist.ts`, `src/types/chain.ts`)**:
     - 预设列表划分为 10 大主流主网与 10 大热门测试网（覆盖 Soneium Minato 1946、Sepolia 11155111、Base Sepolia 84532、Arb Sepolia 421614 等）。
     - 针对默认生态 Soneium，新增高保真 Minato 测试网兜底数据 `FALLBACK_SONEIUM_MINATO`（含官方、dRPC、RouteMesh、Sentio 节点）。

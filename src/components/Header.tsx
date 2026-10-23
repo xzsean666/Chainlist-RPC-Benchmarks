@@ -135,13 +135,13 @@ export const Header: React.FC<HeaderProps> = ({
             {isChainMenuOpen && (
               <>
                 <div
-                  className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+                  className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
                   onClick={() => setIsChainMenuOpen(false)}
                 />
 
-                <div className="absolute right-0 mt-2 w-84 sm:w-96 rounded-2xl bg-slate-900/98 border border-slate-800 shadow-2xl p-3 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                <div className="absolute right-0 mt-2 w-[22rem] sm:w-[26rem] rounded-2xl bg-[#0c121e] border border-slate-700 shadow-2xl shadow-black p-3.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                   {/* Category Switcher Tabs */}
-                  <div className="flex items-center p-1 bg-slate-950/70 rounded-xl border border-slate-800/80 mb-3">
+                  <div className="flex items-center p-1 bg-slate-950 rounded-xl border border-slate-800 mb-3">
                     <button
                       type="button"
                       onClick={() => setActiveTab('all')}
@@ -178,14 +178,14 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {/* Search Input */}
-                  <div className="relative mb-2.5">
+                  <div className="relative mb-3">
                     <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                     <input
                       type="text"
                       placeholder="搜索网络名称或 Chain ID (如 Minato, Sepolia, 1946)..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-8.5 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                      className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8.5 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
                     />
                     {searchQuery && (
                       <button
@@ -198,7 +198,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {/* Popular Testnets Fast Jump Chips */}
-                  <div className="mb-2.5 px-0.5">
+                  <div className="mb-3 px-0.5">
                     <div className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
                       <span>⚡ 热门测试网快捷选择:</span>
                     </div>
@@ -206,10 +206,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSelectChain(1946)}
-                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-mono transition ${
                           selectedChainId === 1946
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
-                            : 'bg-slate-950/80 text-amber-300/80 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-200'
+                            ? 'bg-amber-500/25 text-amber-200 border-amber-500 font-bold shadow-sm'
+                            : 'bg-slate-950 text-amber-300 border-amber-500/30 hover:bg-amber-950/40 hover:border-amber-500/60'
                         }`}
                       >
                         🧪 Soneium Minato #1946
@@ -217,10 +217,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSelectChain(11155111)}
-                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-mono transition ${
                           selectedChainId === 11155111
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
-                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                            ? 'bg-amber-500/25 text-amber-200 border-amber-500 font-bold shadow-sm'
+                            : 'bg-slate-950 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         Sepolia #11155111
@@ -228,10 +228,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSelectChain(84532)}
-                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-mono transition ${
                           selectedChainId === 84532
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
-                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                            ? 'bg-amber-500/25 text-amber-200 border-amber-500 font-bold shadow-sm'
+                            : 'bg-slate-950 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         Base Sepolia #84532
@@ -239,10 +239,10 @@ export const Header: React.FC<HeaderProps> = ({
                       <button
                         type="button"
                         onClick={() => handleSelectChain(421614)}
-                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border font-mono transition ${
                           selectedChainId === 421614
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
-                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                            ? 'bg-amber-500/25 text-amber-200 border-amber-500 font-bold shadow-sm'
+                            : 'bg-slate-950 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
                         }`}
                       >
                         Arb Sepolia #421614
@@ -251,7 +251,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {/* Chain List */}
-                  <div className="space-y-1 max-h-56 overflow-y-auto pr-1 border-t border-slate-800/80 pt-2">
+                  <div className="space-y-1 max-h-60 overflow-y-auto pr-1 border-t border-slate-800 pt-2.5">
                     {filteredChains.length === 0 ? (
                       <div className="text-center py-6 text-xs text-slate-500">
                         未匹配到网络，可在下方输入自定义 Chain ID 载入
@@ -267,9 +267,9 @@ export const Header: React.FC<HeaderProps> = ({
                             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
                               isSelected
                                 ? chain.isTestnet
-                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                                  : 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
-                                : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent'
+                                  ? 'bg-amber-950/60 text-amber-200 border border-amber-500/60 shadow-sm'
+                                  : 'bg-blue-950/60 text-blue-200 border border-blue-500/60 shadow-sm'
+                                : 'bg-slate-950/40 hover:bg-slate-800 text-slate-200 border border-slate-800/80 hover:border-slate-700'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -280,17 +280,17 @@ export const Header: React.FC<HeaderProps> = ({
                               )}
                               <span className="truncate">{chain.name}</span>
                               {chain.isTestnet ? (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40">
                                   Testnet
                                 </span>
                               ) : (
-                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                   Mainnet
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="font-mono text-slate-500 text-[11px]">#{chain.chainId}</span>
+                              <span className="font-mono text-slate-400 text-[11px]">#{chain.chainId}</span>
                               {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400" />}
                             </div>
                           </button>
@@ -300,21 +300,21 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
 
                   {/* Custom Chain ID Section */}
-                  <div className="border-t border-slate-800/80 mt-2.5 pt-2 px-1">
+                  <div className="border-t border-slate-800 mt-3 pt-2.5 px-0.5">
                     <div className="text-[11px] font-semibold text-slate-400 mb-1.5 flex items-center justify-between">
                       <span>输入自定义 EVM Chain ID:</span>
                     </div>
-                    <form onSubmit={handleCustomChainSubmit} className="flex gap-1.5">
+                    <form onSubmit={handleCustomChainSubmit} className="flex gap-2">
                       <input
                         type="number"
                         placeholder="例如: 1946 (Minato) 或 11155111"
                         value={customChainInput}
                         onChange={(e) => setCustomChainInput(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono transition"
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono transition"
                       />
                       <button
                         type="submit"
-                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shrink-0 shadow-sm"
+                        className="px-4 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shrink-0 shadow-md"
                       >
                         加载网络
                       </button>
