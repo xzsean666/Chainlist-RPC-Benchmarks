@@ -18,6 +18,7 @@ const SONEIUM_DEFAULT = {
   shortName: 'soneium',
   title: 'Soneium mainnet',
   chain: 'ETH',
+  isTestnet: false,
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   infoURL: 'https://soneium.org',
   explorers: [
@@ -63,6 +64,51 @@ const SONEIUM_DEFAULT = {
     }
   ]
 };
+
+// Known default for Chain 1946 (Soneium Minato Testnet) as resilient fallback
+const SONEIUM_MINATO_DEFAULT = {
+  chainId: 1946,
+  name: 'Soneium Minato Testnet',
+  shortName: 'soneium-minato',
+  title: 'Soneium Testnet Minato',
+  chain: 'ETH',
+  isTestnet: true,
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  infoURL: 'https://soneium.org',
+  explorers: [
+    { name: 'blockscout', url: 'https://soneium-minato.blockscout.com', standard: 'EIP3091' }
+  ],
+  rpc: [
+    {
+      url: 'https://rpc.minato.soneium.org',
+      tracking: 'unknown',
+      trackingDetails: 'Official Soneium foundation Minato RPC'
+    },
+    {
+      url: 'https://soneium-minato.drpc.org',
+      tracking: 'none',
+      trackingDetails: 'dRPC decentralized provider'
+    },
+    {
+      url: 'https://lb.routeme.sh/rpc/evm/1946',
+      tracking: 'limited',
+      trackingDetails: 'RouteMesh smart routing metadata'
+    },
+    {
+      url: 'https://soneium-minato.rpc.sentio.xyz',
+      tracking: 'limited',
+      trackingDetails: 'Sentio RPC endpoint'
+    }
+  ]
+};
+
+function checkIsTestnet(chainId: number, chainObj: Record<string, unknown> = {}): boolean {
+  if ([1946, 11155111, 17000, 84532, 421614, 11155420, 80002, 97, 43113, 10143].includes(chainId)) {
+    return true;
+  }
+  const name = String(chainObj.name || chainObj.title || chainObj.shortName || '').toLowerCase();
+  return /testnet|sepolia|holesky|goerli|amoy|fuji|devnet|minato|mumbai/i.test(name);
+}
 
 export async function onRequestOptions(): Promise<Response> {
   return new Response(null, {
@@ -113,11 +159,13 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
             return null;
           }).filter(Boolean);
 
+          const isTestnet = checkIsTestnet(chainId, chain);
           const result = {
             source: 'chainlist',
             timestamp: Date.now(),
             data: {
               ...chain,
+              isTestnet,
               rpc: normalizedRpcs
             }
           };
@@ -149,11 +197,13 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
         return null;
       }).filter(Boolean);
 
+      const isTestnet = checkIsTestnet(chainId, ethListChain);
       const result = {
         source: 'ethereum-lists',
         timestamp: Date.now(),
         data: {
           ...ethListChain,
+          isTestnet,
           rpc: normalizedRpcs
         }
       };
@@ -170,12 +220,24 @@ export async function onRequestGet(context: EventContext): Promise<Response> {
     console.error('Ethereum-lists fallback failed:', err);
   }
 
-  // 3. Fallback for Chain 1868
+  // 3. Fallback for Chain 1868 (Soneium Mainnet)
   if (chainId === 1868) {
     return new Response(JSON.stringify({
       source: 'fallback',
       timestamp: Date.now(),
       data: SONEIUM_DEFAULT
+    }), {
+      status: 200,
+      headers: CORS_HEADERS
+    });
+  }
+
+  // 4. Fallback for Chain 1946 (Soneium Minato Testnet)
+  if (chainId === 1946) {
+    return new Response(JSON.stringify({
+      source: 'fallback',
+      timestamp: Date.now(),
+      data: SONEIUM_MINATO_DEFAULT
     }), {
       status: 200,
       headers: CORS_HEADERS

@@ -263,6 +263,7 @@ export default function App() {
           maxBlockNumber={benchmarkState.maxBlockNumber}
           chainId={selectedChainId}
           chainName={currentChain?.name || `Chain #${selectedChainId}`}
+          isTestnet={currentChain?.isTestnet}
           onClose={() => setIsDeepReportOpen(false)}
         />
       )}

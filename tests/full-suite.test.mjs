@@ -8,7 +8,15 @@ import {
   generateNodeAdvisory,
 } from '../src/lib/benchmark/metrics.ts';
 import { testRpcEndpoint } from '../src/lib/benchmark/rpcClient.ts';
-import { sanitizeRpcEndpoints, FALLBACK_SONEIUM } from '../src/lib/chainlist.ts';
+import {
+  sanitizeRpcEndpoints,
+  FALLBACK_SONEIUM,
+  FALLBACK_SONEIUM_MINATO,
+  POPULAR_CHAINS,
+  POPULAR_MAINNETS,
+  POPULAR_TESTNETS,
+  isTestnetChain
+} from '../src/lib/chainlist.ts';
 
 let passedTests = 0;
 let totalTests = 0;
@@ -75,6 +83,37 @@ async function main() {
     assert.ok(FALLBACK_SONEIUM.rpc.length >= 7);
     const sanitized = sanitizeRpcEndpoints(FALLBACK_SONEIUM.rpc);
     assert.ok(sanitized.length >= 6);
+  });
+
+  runTest('Fallback Soneium Minato testnet (#1946) has valid structure and RPC endpoints', () => {
+    assert.strictEqual(FALLBACK_SONEIUM_MINATO.chainId, 1946);
+    assert.strictEqual(FALLBACK_SONEIUM_MINATO.name, 'Soneium Minato Testnet');
+    assert.strictEqual(FALLBACK_SONEIUM_MINATO.isTestnet, true);
+    assert.ok(FALLBACK_SONEIUM_MINATO.rpc.length >= 4);
+    const sanitized = sanitizeRpcEndpoints(FALLBACK_SONEIUM_MINATO.rpc);
+    assert.ok(sanitized.length >= 4);
+  });
+
+  runTest('isTestnetChain accurately distinguishes Mainnets from Testnets', () => {
+    assert.strictEqual(isTestnetChain(1868, 'Soneium Mainnet'), false);
+    assert.strictEqual(isTestnetChain(1, 'Ethereum Mainnet'), false);
+    assert.strictEqual(isTestnetChain(8453, 'Base'), false);
+    assert.strictEqual(isTestnetChain(1946, 'Soneium Minato Testnet'), true);
+    assert.strictEqual(isTestnetChain(11155111, 'Ethereum Sepolia'), true);
+    assert.strictEqual(isTestnetChain(84532, 'Base Sepolia'), true);
+    assert.strictEqual(isTestnetChain(999999, 'Arbitrum Sepolia Testnet'), true);
+    assert.strictEqual(isTestnetChain(777777, 'My Custom EVM'), false);
+  });
+
+  runTest('POPULAR_CHAINS presets list is balanced between Mainnet and Testnet', () => {
+    assert.ok(POPULAR_CHAINS.length >= 20);
+    assert.strictEqual(POPULAR_MAINNETS.length, 10);
+    assert.strictEqual(POPULAR_TESTNETS.length, 10);
+    for (const chain of POPULAR_CHAINS) {
+      assert.ok(typeof chain.chainId === 'number' && chain.chainId > 0);
+      assert.ok(typeof chain.name === 'string' && chain.name.length > 0);
+      assert.ok(typeof chain.isTestnet === 'boolean');
+    }
   });
 
   // --- Suite 2: Statistical & Latency Percentiles ---

@@ -1,6 +1,17 @@
-import React, { useState } from 'react';
-import { Activity, RefreshCw, Globe, ChevronDown, Layers, FileText } from 'lucide-react';
-import { POPULAR_CHAINS } from '../lib/chainlist';
+import React, { useState, useMemo } from 'react';
+import {
+  Activity,
+  RefreshCw,
+  Globe,
+  ChevronDown,
+  Layers,
+  FileText,
+  FlaskConical,
+  Search,
+  X,
+  Check
+} from 'lucide-react';
+import { POPULAR_CHAINS, isTestnetChain } from '../lib/chainlist';
 import type { ChainData } from '../types/chain';
 
 interface HeaderProps {
@@ -21,7 +32,29 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDeepReport,
 }) => {
   const [isChainMenuOpen, setIsChainMenuOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'mainnet' | 'testnet'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [customChainInput, setCustomChainInput] = useState('');
+
+  const isCurrentTestnet = useMemo(() => {
+    if (currentChain?.isTestnet !== undefined) return currentChain.isTestnet;
+    return isTestnetChain(selectedChainId, currentChain?.name);
+  }, [currentChain, selectedChainId]);
+
+  const filteredChains = useMemo(() => {
+    return POPULAR_CHAINS.filter((chain) => {
+      // Tab filter
+      if (activeTab === 'mainnet' && chain.isTestnet) return false;
+      if (activeTab === 'testnet' && !chain.isTestnet) return false;
+
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        return chain.name.toLowerCase().includes(q) || chain.chainId.toString().includes(q);
+      }
+      return true;
+    });
+  }, [activeTab, searchQuery]);
 
   const handleCustomChainSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +63,14 @@ export const Header: React.FC<HeaderProps> = ({
       onSelectChain(id);
       setIsChainMenuOpen(false);
       setCustomChainInput('');
+      setSearchQuery('');
     }
+  };
+
+  const handleSelectChain = (chainId: number) => {
+    onSelectChain(chainId);
+    setIsChainMenuOpen(false);
+    setSearchQuery('');
   };
 
   return (
@@ -61,67 +101,227 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Chain Selector & Action */}
+        {/* Chain Selector & Actions */}
         <div className="flex items-center gap-2.5 flex-wrap">
           {/* Chain Dropdown Button */}
           <div className="relative">
             <button
               onClick={() => setIsChainMenuOpen(!isChainMenuOpen)}
               className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-600 text-slate-200 text-sm font-medium transition shadow-sm"
+              title="切换主网或测试网"
             >
-              <Layers className="w-4 h-4 text-blue-400" />
-              <span>
-                {currentChain ? `${currentChain.name} (#${currentChain.chainId})` : `Chain #${selectedChainId}`}
+              {isCurrentTestnet ? (
+                <FlaskConical className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Layers className="w-4 h-4 text-blue-400" />
+              )}
+              <span className="font-medium">
+                {currentChain ? currentChain.name : `Chain #${selectedChainId}`}
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              <span className="font-mono text-xs text-slate-500">#{selectedChainId}</span>
+              {isCurrentTestnet ? (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                  🧪 测试网
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  🌐 主网
+                </span>
+              )}
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isChainMenuOpen ? 'rotate-180' : ''}`} />
             </button>
 
+            {/* Dropdown Menu Modal Backdrop */}
             {isChainMenuOpen && (
-              <div className="absolute right-0 mt-2 w-72 rounded-xl bg-slate-900/95 border border-slate-800 shadow-2xl p-2 z-50 backdrop-blur-xl">
-                <div className="text-[11px] font-semibold text-slate-400 px-2 py-1 uppercase tracking-wider">
-                  Popular EVM Chains
-                </div>
-                <div className="space-y-0.5 max-h-56 overflow-y-auto">
-                  {POPULAR_CHAINS.map((chain) => (
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+                  onClick={() => setIsChainMenuOpen(false)}
+                />
+
+                <div className="absolute right-0 mt-2 w-84 sm:w-96 rounded-2xl bg-slate-900/98 border border-slate-800 shadow-2xl p-3 z-50 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                  {/* Category Switcher Tabs */}
+                  <div className="flex items-center p-1 bg-slate-950/70 rounded-xl border border-slate-800/80 mb-3">
                     <button
-                      key={chain.chainId}
-                      onClick={() => {
-                        onSelectChain(chain.chainId);
-                        setIsChainMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs font-medium transition ${
-                        selectedChainId === chain.chainId
-                          ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      type="button"
+                      onClick={() => setActiveTab('all')}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
+                        activeTab === 'all'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
                       }`}
                     >
-                      <span>{chain.name}</span>
-                      <span className="font-mono text-slate-500">#{chain.chainId}</span>
+                      全部网络 ({POPULAR_CHAINS.length})
                     </button>
-                  ))}
-                </div>
-
-                <div className="border-t border-slate-800 my-2 pt-2">
-                  <div className="text-[11px] font-semibold text-slate-400 px-2 mb-1.5">
-                    Custom Chain ID
-                  </div>
-                  <form onSubmit={handleCustomChainSubmit} className="flex gap-1.5 px-1">
-                    <input
-                      type="number"
-                      placeholder="e.g. 1868"
-                      value={customChainInput}
-                      onChange={(e) => setCustomChainInput(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-md px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono"
-                    />
                     <button
-                      type="submit"
-                      className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-xs font-medium transition"
+                      type="button"
+                      onClick={() => setActiveTab('mainnet')}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
+                        activeTab === 'mainnet'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
                     >
-                      Load
+                      🌐 主网 (10)
                     </button>
-                  </form>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('testnet')}
+                      className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition ${
+                        activeTab === 'testnet'
+                          ? 'bg-amber-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      🧪 测试网 (10)
+                    </button>
+                  </div>
+
+                  {/* Search Input */}
+                  <div className="relative mb-2.5">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="搜索网络名称或 Chain ID (如 Minato, Sepolia, 1946)..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-700/80 rounded-xl pl-8.5 pr-8 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-200"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Popular Testnets Fast Jump Chips */}
+                  <div className="mb-2.5 px-0.5">
+                    <div className="text-[10px] uppercase font-semibold tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
+                      <span>⚡ 热门测试网快捷选择:</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectChain(1946)}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                          selectedChainId === 1946
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
+                            : 'bg-slate-950/80 text-amber-300/80 border-amber-500/30 hover:bg-amber-500/10 hover:text-amber-200'
+                        }`}
+                      >
+                        🧪 Soneium Minato #1946
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectChain(11155111)}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                          selectedChainId === 11155111
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
+                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        Sepolia #11155111
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectChain(84532)}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                          selectedChainId === 84532
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
+                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        Base Sepolia #84532
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectChain(421614)}
+                        className={`text-[11px] px-2 py-0.5 rounded-md border font-mono transition ${
+                          selectedChainId === 421614
+                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/50 font-bold'
+                            : 'bg-slate-950/80 text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white'
+                        }`}
+                      >
+                        Arb Sepolia #421614
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Chain List */}
+                  <div className="space-y-1 max-h-56 overflow-y-auto pr-1 border-t border-slate-800/80 pt-2">
+                    {filteredChains.length === 0 ? (
+                      <div className="text-center py-6 text-xs text-slate-500">
+                        未匹配到网络，可在下方输入自定义 Chain ID 载入
+                      </div>
+                    ) : (
+                      filteredChains.map((chain) => {
+                        const isSelected = selectedChainId === chain.chainId;
+                        return (
+                          <button
+                            key={chain.chainId}
+                            type="button"
+                            onClick={() => handleSelectChain(chain.chainId)}
+                            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition ${
+                              isSelected
+                                ? chain.isTestnet
+                                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                                  : 'bg-blue-600/20 text-blue-400 border border-blue-500/40'
+                                : 'text-slate-300 hover:bg-slate-800/80 hover:text-white border border-transparent'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {chain.isTestnet ? (
+                                <FlaskConical className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                              ) : (
+                                <Layers className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                              )}
+                              <span className="truncate">{chain.name}</span>
+                              {chain.isTestnet ? (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                                  Testnet
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                  Mainnet
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="font-mono text-slate-500 text-[11px]">#{chain.chainId}</span>
+                              {isSelected && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Custom Chain ID Section */}
+                  <div className="border-t border-slate-800/80 mt-2.5 pt-2 px-1">
+                    <div className="text-[11px] font-semibold text-slate-400 mb-1.5 flex items-center justify-between">
+                      <span>输入自定义 EVM Chain ID:</span>
+                    </div>
+                    <form onSubmit={handleCustomChainSubmit} className="flex gap-1.5">
+                      <input
+                        type="number"
+                        placeholder="例如: 1946 (Minato) 或 11155111"
+                        value={customChainInput}
+                        onChange={(e) => setCustomChainInput(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 font-mono transition"
+                      />
+                      <button
+                        type="submit"
+                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition shrink-0 shadow-sm"
+                      >
+                        加载网络
+                      </button>
+                    </form>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
 
@@ -148,7 +348,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Sync Chainlist</span>
           </button>
 
-          {/* Soneium Explorer Link */}
+          {/* Chain Explorer Link */}
           {currentChain?.explorers?.[0] && (
             <a
               href={currentChain.explorers[0].url}

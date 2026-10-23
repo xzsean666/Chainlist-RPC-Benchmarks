@@ -19,6 +19,7 @@ interface DeepReportModalProps {
   maxBlockNumber: number | null;
   chainId: number;
   chainName: string;
+  isTestnet?: boolean;
   onClose: () => void;
 }
 
@@ -28,6 +29,7 @@ export const DeepReportModal: React.FC<DeepReportModalProps> = ({
   maxBlockNumber,
   chainId,
   chainName,
+  isTestnet,
   onClose,
 }) => {
   const [copied, setCopied] = useState(false);
@@ -35,6 +37,7 @@ export const DeepReportModal: React.FC<DeepReportModalProps> = ({
   // Generate complete Markdown report with four-dimensional capability matrix
   const generateMarkdownReport = () => {
     const nowIso = new Date().toISOString();
+    const networkBadge = isTestnet ? ' (🧪 Testnet 测试网)' : ' (🌐 Mainnet 主网)';
     const rows = rankedUrls
       .map((url) => {
         const item = stats[url];
@@ -56,7 +59,7 @@ export const DeepReportModal: React.FC<DeepReportModalProps> = ({
       .filter(Boolean)
       .join('\n');
 
-    return `# ${chainName} (Chain ID: ${chainId}) RPC 实测深度能力画像与诊断报告
+    return `# ${chainName} (Chain ID: ${chainId}${networkBadge}) RPC 实测深度能力画像与诊断报告
 
 生成时间：${nowIso}
 全网最高已观测区块：#${maxBlockNumber ?? '待探测'}
@@ -147,11 +150,20 @@ ${rankedUrls
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 flex-wrap">
                 <span>{chainName} RPC 深度能力画像与诊断报告</span>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-blue-600/20 text-blue-400 font-mono">
                   Chain ID: {chainId}
                 </span>
+                {isTestnet ? (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-semibold">
+                    🧪 测试网
+                  </span>
+                ) : (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-semibold">
+                    🌐 主网
+                  </span>
+                )}
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
                 实时对比新区块读取滞后 (-32001)、归档深度能力、CORS 及智能避坑建议

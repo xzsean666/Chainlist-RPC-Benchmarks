@@ -1,16 +1,44 @@
-import type { ChainData, ChainFetchResponse, RpcEndpoint } from '../types/chain.ts';
+import type { ChainData, ChainFetchResponse, ChainPreset, RpcEndpoint } from '../types/chain.ts';
 
-// Default presets for fast switching & fallback
-export const POPULAR_CHAINS: { chainId: number; name: string }[] = [
-  { chainId: 1868, name: 'Soneium Mainnet' },
-  { chainId: 1, name: 'Ethereum Mainnet' },
-  { chainId: 8453, name: 'Base' },
-  { chainId: 42161, name: 'Arbitrum One' },
-  { chainId: 10, name: 'Optimism' },
-  { chainId: 137, name: 'Polygon PoS' },
-  { chainId: 56, name: 'BNB Smart Chain' },
-  { chainId: 43114, name: 'Avalanche C-Chain' },
+// Default presets for fast switching & fallback, categorizing Mainnets and Testnets
+export const POPULAR_CHAINS: ChainPreset[] = [
+  // --- Mainnets ---
+  { chainId: 1868, name: 'Soneium Mainnet', isTestnet: false, category: 'Mainnet' },
+  { chainId: 1, name: 'Ethereum Mainnet', isTestnet: false, category: 'Mainnet' },
+  { chainId: 8453, name: 'Base', isTestnet: false, category: 'Mainnet' },
+  { chainId: 42161, name: 'Arbitrum One', isTestnet: false, category: 'Mainnet' },
+  { chainId: 10, name: 'Optimism', isTestnet: false, category: 'Mainnet' },
+  { chainId: 137, name: 'Polygon PoS', isTestnet: false, category: 'Mainnet' },
+  { chainId: 56, name: 'BNB Smart Chain', isTestnet: false, category: 'Mainnet' },
+  { chainId: 43114, name: 'Avalanche C-Chain', isTestnet: false, category: 'Mainnet' },
+  { chainId: 59144, name: 'Linea', isTestnet: false, category: 'Mainnet' },
+  { chainId: 534352, name: 'Scroll', isTestnet: false, category: 'Mainnet' },
+
+  // --- Popular Testnets ---
+  { chainId: 1946, name: 'Soneium Minato Testnet', isTestnet: true, category: 'Testnet' },
+  { chainId: 11155111, name: 'Ethereum Sepolia', isTestnet: true, category: 'Testnet' },
+  { chainId: 17000, name: 'Ethereum Holesky', isTestnet: true, category: 'Testnet' },
+  { chainId: 84532, name: 'Base Sepolia', isTestnet: true, category: 'Testnet' },
+  { chainId: 421614, name: 'Arbitrum Sepolia', isTestnet: true, category: 'Testnet' },
+  { chainId: 11155420, name: 'OP Sepolia', isTestnet: true, category: 'Testnet' },
+  { chainId: 80002, name: 'Polygon Amoy', isTestnet: true, category: 'Testnet' },
+  { chainId: 97, name: 'BNB Chain Testnet', isTestnet: true, category: 'Testnet' },
+  { chainId: 43113, name: 'Avalanche Fuji', isTestnet: true, category: 'Testnet' },
+  { chainId: 10143, name: 'Monad Testnet', isTestnet: true, category: 'Testnet' },
 ];
+
+export const POPULAR_MAINNETS = POPULAR_CHAINS.filter(c => !c.isTestnet);
+export const POPULAR_TESTNETS = POPULAR_CHAINS.filter(c => c.isTestnet);
+
+/**
+ * Determine if a chain is a testnet based on chain ID or name
+ */
+export function isTestnetChain(chainId: number, chainName?: string): boolean {
+  const preset = POPULAR_CHAINS.find(c => c.chainId === chainId);
+  if (preset) return preset.isTestnet;
+  if (!chainName) return false;
+  return /testnet|sepolia|holesky|goerli|amoy|fuji|devnet|minato|mumbai/i.test(chainName);
+}
 
 export const FALLBACK_SONEIUM: ChainData = {
   chainId: 1868,
@@ -18,6 +46,7 @@ export const FALLBACK_SONEIUM: ChainData = {
   shortName: 'soneium',
   title: 'Soneium mainnet',
   chain: 'ETH',
+  isTestnet: false,
   nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
   infoURL: 'https://soneium.org',
   explorers: [
@@ -60,6 +89,42 @@ export const FALLBACK_SONEIUM: ChainData = {
       url: 'https://1868.rpc.thirdweb.com',
       tracking: 'yes',
       trackingDetails: 'Thirdweb managed RPC'
+    }
+  ]
+};
+
+export const FALLBACK_SONEIUM_MINATO: ChainData = {
+  chainId: 1946,
+  name: 'Soneium Minato Testnet',
+  shortName: 'soneium-minato',
+  title: 'Soneium Testnet Minato',
+  chain: 'ETH',
+  isTestnet: true,
+  nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+  infoURL: 'https://soneium.org',
+  explorers: [
+    { name: 'blockscout', url: 'https://soneium-minato.blockscout.com', standard: 'EIP3091' }
+  ],
+  rpc: [
+    {
+      url: 'https://rpc.minato.soneium.org',
+      tracking: 'unknown',
+      trackingDetails: 'Official Soneium foundation Minato RPC'
+    },
+    {
+      url: 'https://soneium-minato.drpc.org',
+      tracking: 'none',
+      trackingDetails: 'dRPC decentralized provider'
+    },
+    {
+      url: 'https://lb.routeme.sh/rpc/evm/1946',
+      tracking: 'limited',
+      trackingDetails: 'RouteMesh smart routing metadata'
+    },
+    {
+      url: 'https://soneium-minato.rpc.sentio.xyz',
+      tracking: 'limited',
+      trackingDetails: 'Sentio RPC endpoint'
     }
   ]
 };
@@ -115,6 +180,7 @@ export async function fetchChainRpcData(chainId: number): Promise<ChainFetchResp
       const json = await res.json() as ChainFetchResponse;
       if (json && json.data && Array.isArray(json.data.rpc)) {
         json.data.rpc = sanitizeRpcEndpoints(json.data.rpc);
+        json.data.isTestnet = isTestnetChain(chainId, json.data.name || json.data.title);
         return json;
       }
     }
@@ -130,6 +196,7 @@ export async function fetchChainRpcData(chainId: number): Promise<ChainFetchResp
       const rawRpcs: (string | RpcEndpoint)[] = Array.isArray(data.rpc) ? data.rpc : [];
       const normalized: RpcEndpoint[] = rawRpcs.map(r => (typeof r === 'string' ? { url: r, tracking: 'unknown' } : r));
       data.rpc = sanitizeRpcEndpoints(normalized);
+      data.isTestnet = isTestnetChain(chainId, data.name || data.title);
       return {
         source: 'ethereum-lists',
         data,
@@ -146,7 +213,20 @@ export async function fetchChainRpcData(chainId: number): Promise<ChainFetchResp
       source: 'fallback',
       data: {
         ...FALLBACK_SONEIUM,
+        isTestnet: false,
         rpc: sanitizeRpcEndpoints(FALLBACK_SONEIUM.rpc)
+      },
+      timestamp: Date.now()
+    };
+  }
+
+  if (chainId === 1946) {
+    return {
+      source: 'fallback',
+      data: {
+        ...FALLBACK_SONEIUM_MINATO,
+        isTestnet: true,
+        rpc: sanitizeRpcEndpoints(FALLBACK_SONEIUM_MINATO.rpc)
       },
       timestamp: Date.now()
     };

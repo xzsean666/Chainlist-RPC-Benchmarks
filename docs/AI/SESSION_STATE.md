@@ -1,9 +1,52 @@
 # Session State
 
-- **当前 Goal**: 构建并在 Cloudflare Pages 上部署支持 Chainlist 动态 RPC 基准测试平台（默认 1868 Soneium），提供全面的 RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系。
-- **当前 Task**: TASK-011 (RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系)
+- **当前 Goal**: 构建并在 Cloudflare Pages 上部署支持 Chainlist 动态 RPC 基准测试平台（支持主网与测试网无缝切换与筛选，默认 1868 Soneium），提供全面的 RPC 深度能力诊断（静态体检 + 新块状态验证）与直观报告体系。
+- **当前 Task**: TASK-012 (支持测试网检测与切换体系（测试网分类筛选、搜索、Soneium Minato/Sepolia 预设与全流程基准测试）)
 - **当前状态**: DONE
 - **已完成内容**:
+  - [x] **测试网预设与数据分类层 (`src/lib/chainlist.ts`, `src/types/chain.ts`)**:
+    - 预设列表划分为 10 大主流主网与 10 大热门测试网（覆盖 Soneium Minato 1946、Sepolia 11155111、Base Sepolia 84532、Arb Sepolia 421614 等）。
+    - 针对默认生态 Soneium，新增高保真 Minato 测试网兜底数据 `FALLBACK_SONEIUM_MINATO`（含官方、dRPC、RouteMesh、Sentio 节点）。
+    - 导出 `isTestnetChain` 智能测试网判定工具函数。
+  - [x] **边缘代理层支持测试网标记与兜底 (`functions/api/chain/[chainId].ts`)**:
+    - 动态解析 Chainlist 和 ethereum-lists 数据并自动注入 `isTestnet: true` 标记。
+    - 添加 1946 Soneium Minato 内置兜底响应，确保在任何网络环境下均秒级返回可用测试网 RPC。
+  - [x] **现代化网络选择与分类交互体验 (`src/components/Header.tsx`)**:
+    - 顶栏按钮直观区分展示 `🌐 主网` (emerald) 与 `🧪 测试网` (amber) 徽章。
+    - 下拉选网菜单新增网络类型 Tab 切换（`全部网络`、`🌐 主网`、`🧪 测试网`）。
+    - 增加即时搜索框，支持链名与 Chain ID 毫秒级模糊匹配。
+    - 增加热门测试网一键快捷跳转 Chips（Minato #1946、Sepolia #11155111、Base Sepolia #84532、Arb Sepolia #421614）。
+  - [x] **深度报告与导出体系透传测试网标记 (`DeepReportModal.tsx`, `ExportModal.tsx`, `App.tsx`)**:
+    - 深度诊断报告标题与元数据明确标识 `🧪 Testnet 测试网` 或 `🌐 Mainnet 主网`。
+    - 导出 JSON/CSV 记录链的网络属性，保证技术评估证据链严谨。
+  - [x] **自动化测试扩展至 19/19 100% 通过**:
+    - 在 `tests/full-suite.test.mjs` 中添加针对测试网判定、Minato 节点结构与预设均衡性的单元测试。
+  - [x] **生产构建与全网发布**:
+    - `npm run build` Vite 编译成功（2.74s）。
+    - 通过 `deploy.sh` 成功重新部署至 Cloudflare Pages 生产网络。
+    - 线上 E2E 测试及 Minato / Sepolia 边缘接口实测全部通过。
+- **修改过的文件**:
+  - `src/types/chain.ts`
+  - `src/lib/chainlist.ts`
+  - `functions/api/chain/[chainId].ts`
+  - `src/components/Header.tsx`
+  - `src/components/DeepReportModal.tsx`
+  - `src/components/ExportModal.tsx`
+  - `src/App.tsx`
+  - `tests/full-suite.test.mjs`
+  - `docs/AI/TASK_INDEX.md`
+  - `docs/AI/SESSION_STATE.md`
+  - `docs/AI/tasks/TASK-012.md`
+- **已运行的验证命令及结果**:
+  - `npm test`: 19/19 自动化测试全部通过，退出码 0。
+  - `npm run build`: Vite & TypeScript 编译通过，耗时 2.74s，退出码 0。
+  - `bash deploy.sh`: 生产版本部署成功，退出码 0。
+  - `npm run test:e2e`: 线上域名真实网络 E2E 验证全部通过，退出码 0。
+  - `curl -s https://chainlist-rpc-benchmarks.pages.dev/api/chain/1946`: 成功返回 Minato 测试网 RPC 列表及 `isTestnet: true`。
+- **线上部署访问地址**:
+  - 生产主站: `https://chainlist-rpc-benchmarks.pages.dev`
+  - Minato 测试网 API: `https://chainlist-rpc-benchmarks.pages.dev/api/chain/1946`
+  - Sepolia 测试网 API: `https://chainlist-rpc-benchmarks.pages.dev/api/chain/11155111`
   - [x] **单次静态能力体检引擎 (Preflight Capability Check)**:
     - 新增 `src/lib/benchmark/preflight.ts`，探测早期区块 0x1 归档支持、CORS 浏览器直连与链 ID 匹配度。
     - 仅在首次加入节点时异步执行 1 次并持久缓存，避免重复占用带宽与打爆限流。

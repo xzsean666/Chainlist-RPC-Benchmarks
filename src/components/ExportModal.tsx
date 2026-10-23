@@ -27,6 +27,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
         chain: {
           chainId: chain?.chainId,
           name: chain?.name,
+          isTestnet: chain?.isTestnet ?? false,
         },
         benchmarkSummary: {
           totalRequests: state.totalRequests,
